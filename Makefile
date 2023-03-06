@@ -4,7 +4,7 @@ SRC_DIR := ./src/...
 TEST_DIR := ./src/...
 BUILD_DIR := ./build
 
-.PHONY: all test format
+.PHONY: all test fmt
 
 # The default target is to build the library.
 all: test
@@ -15,6 +15,6 @@ test: format
 	@go test $(GO_FLAGS) $(TEST_DIR)
 
 # Format the source code.
-format:
+fmt:
 	@echo "Formatting source code..."
 	@go fmt $(SRC_DIR)
