@@ -1,7 +1,8 @@
 package retry
 
 import (
-	"math/rand"
+	"github.com/gtxistxgao/go-retry/src/mathutil"
+	"github.com/gtxistxgao/go-retry/src/timeutil"
 	"time"
 )
 
@@ -15,7 +16,7 @@ type ExponentialRetryOption struct {
 }
 
 func (e *ExponentialRetryOption) getWaitTime(retryCount uint) time.Duration {
-	return e.Base + e.Step*time.Duration(ExponentBase2(retryCount)) + RandomDuration(e.Jitter)
+	return e.Base + e.Step*time.Duration(mathutil.ExponentBase2(retryCount)) + timeutil.RandomDuration(e.Jitter)
 }
 
 func (e *ExponentialRetryOption) maxRetryAttempts() uint {
@@ -29,18 +30,4 @@ func (e *ExponentialRetryOption) maxRetryAttempts() uint {
 
 func (e *ExponentialRetryOption) logError() bool {
 	return e.LogError
-}
-
-// ExponentBase2 computes 2^a where a >= 0. If a is 0, the result is 0.
-func ExponentBase2(a uint) uint {
-	return 1 << a
-}
-
-// RandomDuration returns a random duration between [0, d).
-func RandomDuration(d time.Duration) time.Duration {
-	if d == 0 {
-		return 0
-	}
-
-	return time.Duration(rand.Int63n(int64(d)))
 }

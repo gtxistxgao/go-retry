@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func Test_ExponentialRetryOption(t *testing.T) {
+func Test_LinearRetryOption(t *testing.T) {
 	tests := []struct {
 		description string
 		retryCount  uint
@@ -24,7 +24,7 @@ func Test_ExponentialRetryOption(t *testing.T) {
 			step:                  time.Millisecond,
 			jitter:                0,
 			logError:              false,
-			expectedWaitTimeRange: []time.Duration{2 * time.Millisecond, 2 * time.Millisecond}, // 1 + 2^0 = 2
+			expectedWaitTimeRange: []time.Duration{1 * time.Millisecond, 1 * time.Millisecond}, // 1 + 1*0 = 1
 		},
 		{
 			description:           "1st retry and no jitter",
@@ -33,7 +33,7 @@ func Test_ExponentialRetryOption(t *testing.T) {
 			step:                  time.Millisecond,
 			jitter:                0,
 			logError:              false,
-			expectedWaitTimeRange: []time.Duration{3 * time.Millisecond, 3 * time.Millisecond}, // 1 + 2^1 = 3
+			expectedWaitTimeRange: []time.Duration{2 * time.Millisecond, 2 * time.Millisecond}, // 1 + 1*1 = 2
 		},
 		{
 			description:           "2nd retry and no jitter",
@@ -42,23 +42,23 @@ func Test_ExponentialRetryOption(t *testing.T) {
 			step:                  time.Millisecond,
 			jitter:                0,
 			logError:              false,
-			expectedWaitTimeRange: []time.Duration{5 * time.Millisecond, 5 * time.Millisecond}, // 1 + 2^2 = 5
+			expectedWaitTimeRange: []time.Duration{3 * time.Millisecond, 3 * time.Millisecond}, // 1 + 2*1 = 3
 		},
 		{
 			description:           "2nd retry and jitter 1 ms",
-			retryCount:            1,
+			retryCount:            2,
 			base:                  time.Second,
 			step:                  time.Second,
 			jitter:                time.Second,
 			logError:              false,
-			expectedWaitTimeRange: []time.Duration{3 * time.Second, 4 * time.Second}, // 1 + 2^1 + jitter[0,1] = [3,4]
+			expectedWaitTimeRange: []time.Duration{3 * time.Second, 4 * time.Second}, // 1 + 2*1 + jitter[0,1] = [3,4]
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.description, func(t *testing.T) {
 			var maxRetryAttempts uint = 5
-			option := &ExponentialRetryOption{
+			option := &LinearRetryOption{
 				Base:             test.base,
 				Step:             test.step,
 				MaxRetryAttempts: maxRetryAttempts,
@@ -77,23 +77,4 @@ func Test_ExponentialRetryOption(t *testing.T) {
 			assert.True(t, waitTime <= test.expectedWaitTimeRange[1], "Wait time is "+waitTime.String()+" and range ends with "+test.expectedWaitTimeRange[0].String())
 		})
 	}
-}
-
-func Test_ExponentBase2(t *testing.T) {
-	// 2^0 == 1
-	assert.Equal(t, uint(1), ExponentBase2(0))
-	// 2^2 == 4
-	assert.Equal(t, uint(4), ExponentBase2(2))
-	// 2^3 == 8
-	assert.Equal(t, uint(8), ExponentBase2(3))
-}
-
-func Test_RandomDuration(t *testing.T) {
-	d := RandomDuration(time.Second)
-	assert.True(t, d >= 0)
-	assert.True(t, d < time.Second)
-
-	d = RandomDuration(time.Millisecond)
-	assert.True(t, d >= 0)
-	assert.True(t, d < time.Millisecond)
 }

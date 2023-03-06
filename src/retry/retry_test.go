@@ -22,6 +22,8 @@ func Test_Run(t *testing.T) {
 		shouldRetry bool
 	}
 
+	nameTag := "test"
+
 	tests := []struct {
 		description           string
 		attemptResults        []*attemptResult
@@ -67,7 +69,7 @@ func Test_Run(t *testing.T) {
 			},
 			maxRetryAttempts: 0,
 			expectedResult:   "",
-			expectedError:    errors.New("try again"),
+			expectedError:    fmt.Errorf("retry job %s error at %d attempt: %w", nameTag, 1, errors.New("try again")),
 		},
 		{
 			description: "1st succeeded and we do not allow retry maxRetryAttempts = 0",
@@ -122,7 +124,7 @@ func Test_Run(t *testing.T) {
 			cancelledAfterAttempt: 1,
 			maxRetryAttempts:      1,
 			expectedResult:        "bad",
-			expectedError:         fmt.Errorf("context cancelled. %w", errors.New("try again")),
+			expectedError:         errors.New("retry job test contextCancelled after 1 attempt: retry job test error at 1 attempt: try again"),
 		},
 	}
 
@@ -149,14 +151,19 @@ func Test_Run(t *testing.T) {
 				return rst.result, rst.err, rst.shouldRetry
 			}
 
-			handler := NewRetryHandler("test",
+			handler := NewRetryHandler(
+				nameTag,
 				retryConfig,
 				retryTask)
 
 			rst, err := handler.Run(ctx)
 
 			assert.Equal(t, test.expectedResult, rst)
-			assert.Equal(t, test.expectedError, err)
+			if test.expectedError != nil {
+				assert.Equal(t, test.expectedError.Error(), err.Error())
+			} else {
+				assert.Nil(t, err)
+			}
 		})
 	}
 }
