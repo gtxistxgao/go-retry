@@ -1,4 +1,4 @@
-package go_retry
+package retry
 
 import (
 	"github.com/stretchr/testify/assert"

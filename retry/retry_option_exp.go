@@ -1,4 +1,4 @@
-package go_retry
+package retry
 
 import (
 	"math/rand"
