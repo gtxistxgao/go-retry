@@ -49,8 +49,9 @@ func (r *Handler[T]) Run(ctx context.Context) (T, error) {
 		result, err, shouldRetryByTask = r.run(ctx)
 		attemptCount++
 		if err != nil {
+			err = fmt.Errorf("retry job %s error at %d attempt: %w", r.nameTag, attemptCount, err)
 			if r.retryOption.logError() {
-				fmt.Errorf("retry job %s error at %d attempt: %w", r.nameTag, attemptCount, err)
+				fmt.Println(err.Error())
 			}
 		}
 	}
@@ -63,7 +64,7 @@ func (r *Handler[T]) Run(ctx context.Context) (T, error) {
 		case <-ctx.Done():
 			// this means the parent context is cancelled. In this case we will return the last updated result and error
 			if r.retryOption.logError() {
-				fmt.Printf("retry job %s contextCancelled after %d attempt: %w", r.nameTag, attemptCount)
+				fmt.Errorf("retry job %s contextCancelled after %d attempt: %w", r.nameTag, attemptCount, err)
 			}
 			return result, fmt.Errorf("context cancelled. %w", err)
 		case <-time.After(r.retryOption.getWaitTime(retryCount)):
